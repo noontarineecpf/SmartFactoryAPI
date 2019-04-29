@@ -22,6 +22,7 @@ const getPanelConfigs = async ctx => {
         //console.log("object");
         const config = await panelConfig.getPanelConfig(ctx.params.panelId);
         ctx.body = JSON.stringify(config);
+        console.log("test");
     } catch (error) {
         console.log(error);
     }
