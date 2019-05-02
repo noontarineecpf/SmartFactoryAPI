@@ -12,7 +12,7 @@ router.get("/locations", location.getLocations);
 router.get("/prdorders/:plantCode/:panelId", receiveController.getProductionOrders);
 router.get("/panelConfigs/:panelId", configController.getPanelConfigs);
 
-//router.post("/rfidTagInfos", receiveController.setRfidTagInfo);
+router.post("/rfidTagInfos", receiveController.setRfidTagInfo);
 
 //router.get("/rfidtaginfos/:plantCode/:rfidNo", productionOrder.getRfidTagInfos);
 //router.post("/updateweights", productionOrder.setUpdateWghInRfid);
