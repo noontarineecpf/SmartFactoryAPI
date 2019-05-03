@@ -35,7 +35,7 @@ const getProductionOrderWithNo = async (plantCode, productionNo, productionDate,
 
   try {
     const sql = `SELECT PO.PRODUCTION_LINE,PO.JOB_ID,PO.BRAND_CODE,PO.PRODUCT_CODE,
-              PO.LOT_NO,PO.SUB_LOT_NO,PO.PRODUCTION_SHIFT
+                CONCAT(CONCAT(PO.LOT_NO,'-'),PO.SUB_LOT_NO) AS LOT_NO,PO.PRODUCTION_SHIFT
                 FROM FD_PPD_PRODUCTION_ORDER PO 
                 WHERE PO.PLANT_CODE = :PLANT_CODE AND 
                 PO.PRODUCTION_TYPE = '01' AND 
@@ -52,9 +52,10 @@ const getProductionOrderWithNo = async (plantCode, productionNo, productionDate,
       EXTEND: extend
     };
     let resultRows = await db.query(sql, params);
-    return resultRows;
+    console.log(resultRows);
+    return resultRows[0];
   } catch (error) {
-    console.log(error);
+    throw error;
   }
 };
 
