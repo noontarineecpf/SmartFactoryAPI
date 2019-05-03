@@ -18,7 +18,7 @@ const getProcessDate = async (orgCode, location) => {
             orgCode: orgCode,
             location: location
         };
-        // console.log(params);
+        console.log(params);
         let resultRows = await db.query(sql, params);
         // console.log(resultRows);
         return resultRows[0].PROCESS_DATE;
