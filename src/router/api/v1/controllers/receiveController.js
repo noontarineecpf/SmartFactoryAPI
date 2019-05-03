@@ -8,7 +8,7 @@ const rfidTagInfos = require("../rfidTagInfo");
 
 const getProductionOrders = async ctx => {
     try {
-        const config = await panelConfig.getPanelConfig(ctx.params.panelId);
+        const [config] = await panelConfig.getPanelConfig(ctx.params.panelId);
         const locationCode = config.LOCATIONCODE;
         const productionDate = await processDate.getProcessDate(ctx.params.plantCode, locationCode);
         const resultRows = await productionOrders.getProductionOrders(ctx.params.plantCode, productionDate);
@@ -25,7 +25,7 @@ const insertRfidTagInfo = async ctx => {
     console.log(ctx.request.body);
     const req = ctx.request.body;
     try {
-        const config = await panelConfig.getPanelConfig(req.panelId);
+        const [config] = await panelConfig.getPanelConfig(req.panelId);
         const locationCode = config.LOCATIONCODE;
         const rfidType = config.RFIDTYPE;
         const productionorderWithNo = await productionOrders.getProductionOrderWithNo(req.plantCode, req.productionNo, req.productionDate, req.extend);
