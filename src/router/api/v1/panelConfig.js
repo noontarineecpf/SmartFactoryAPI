@@ -13,7 +13,7 @@ const getPanelConfig = async (panelId) => {
 
         let resultRows = await db.query(sql, params);
         console.log(resultRows);
-        return resultRows[0];
+        return resultRows;
     } catch (error) {
         console.log(error);
     }
