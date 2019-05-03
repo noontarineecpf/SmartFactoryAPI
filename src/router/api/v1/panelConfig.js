@@ -3,7 +3,8 @@ const getPanelConfig = async (panelId) => {
     try {
         const sql = `select 
         MAX(DECODE(panel_key,'ProgramCode',panel_Value)) AS ProgramCode,
-        MAX(DECODE(panel_key,'LocationCode',panel_Value)) AS LocationCode
+        MAX(DECODE(panel_key,'LocationCode',panel_Value)) AS LocationCode,
+        MAX(DECODE(panel_key,'RfidType',panel_Value)) AS RfidType
         from Fd_Panel_Config  where panel_id=:panelId`;
 
         const params = {
@@ -12,7 +13,7 @@ const getPanelConfig = async (panelId) => {
 
         let resultRows = await db.query(sql, params);
         console.log(resultRows);
-        return resultRows;
+        return resultRows[0];
     } catch (error) {
         console.log(error);
     }
