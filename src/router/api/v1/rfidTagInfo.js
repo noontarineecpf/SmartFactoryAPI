@@ -6,7 +6,9 @@ const getRfidTagInfos = async (plantCode, rfidNo) => {
 
   try {
     const sql = `SELECT RI.RFID_NO,RI.PRODUCTION_DATE,RI.PRODUCTION_NO,RI.PRODUCTION_LINE,WC.DESC_LOC,WC.DESC_ENG,
-        RI.SUPERVISOR_CODE,EI.DESC_LOC,EI.DESC_ENG,RI.PRODUCT_CODE,RI.BRAND_CODE,PG.DESC_LOC,PG.DESC_ENG,RI.LOT_NO, 
+        RI.SUPERVISOR_CODE,EI.DESC_LOC AS EMP_NAME_LOC,EI.DESC_ENG AS EMP_NAME_ENG,
+        RI.PRODUCT_CODE,RI.BRAND_CODE,PG.DESC_LOC AS PRODUCT_NAME_LOC,
+        PG.DESC_ENG AS PRODUCT_NAME_ENG,RI.LOT_NO, 
         RI.SHIFT_CODE,NVL(RI.RECEIVE_QTY,0) AS RECEIVE_QTY,NVL(RI.RECEIVE_WGH,0) AS RECEIVE_WGH,
         NVL(RI.STOCK_QTY,0) AS STOCK_QTY,NVL(STOCK_WGH,0) AS STOCK_WGH, RI.LOCATION_CODE ,RI.JOB_ID
         FROM FM_RFIDTAG_INFO RI , FD_PPD_WORK_CENTER WC , FM_EMPLOYEE_INFO EI , MAS_PRODUCT_GENERAL PG 
@@ -106,7 +108,7 @@ const updateRfidTagInfo = async (params) => {
 
     console.log(params);
     const result = await db.execute(sql, params);
-    
+
     if (result.rowsAffected && result.rowsAffected === 1) {
       return true;
     } else {
@@ -134,7 +136,7 @@ const updateFlagRfidTagInfo = async (params) => {
 
     console.log(params);
     const result = await db.execute(sql, params);
-    
+
     if (result.rowsAffected && result.rowsAffected === 1) {
       return true;
     } else {
