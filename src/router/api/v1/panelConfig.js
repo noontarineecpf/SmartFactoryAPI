@@ -4,7 +4,8 @@ const getPanelConfig = async (panelId) => {
         const sql = `select 
         MAX(DECODE(panel_key,'ProgramCode',panel_Value)) AS ProgramCode,
         MAX(DECODE(panel_key,'LocationCode',panel_Value)) AS LocationCode,
-        MAX(DECODE(panel_key,'RfidType',panel_Value)) AS RfidType
+        MAX(DECODE(panel_key,'RfidType',panel_Value)) AS RfidType,
+        MAX(DECODE(panel_key,'StockDocType',panel_Value)) AS StockDocType
         from Fd_Panel_Config  where panel_id=:panelId`;
 
         const params = {
