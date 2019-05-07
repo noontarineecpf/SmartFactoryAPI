@@ -8,7 +8,7 @@ const getRfidTagInfos = async (plantCode, rfidNo) => {
     const sql = `SELECT RI.RFID_NO,RI.PRODUCTION_DATE,RI.PRODUCTION_NO,RI.PRODUCTION_LINE,WC.DESC_LOC,WC.DESC_ENG,
         RI.SUPERVISOR_CODE,EI.DESC_LOC,EI.DESC_ENG,RI.PRODUCT_CODE,RI.BRAND_CODE,PG.DESC_LOC,PG.DESC_ENG,RI.LOT_NO, 
         RI.SHIFT_CODE,NVL(RI.RECEIVE_QTY,0) AS RECEIVE_QTY,NVL(RI.RECEIVE_WGH,0) AS RECEIVE_WGH,
-        NVL(RI.STOCK_QTY,0) AS STOCK_QTY,NVL(STOCK_WGH,0) AS STOCK_WGH
+        NVL(RI.STOCK_QTY,0) AS STOCK_QTY,NVL(STOCK_WGH,0) AS STOCK_WGH, RI.LOCATION_CODE ,RI.JOB_ID
         FROM FM_RFIDTAG_INFO RI , FD_PPD_WORK_CENTER WC , FM_EMPLOYEE_INFO EI , MAS_PRODUCT_GENERAL PG 
         WHERE RI.PLANT_CODE = :PLANT_CODE AND 
         RI.RFID_NO = :RFID_NO AND 
@@ -117,8 +117,37 @@ const updateRfidTagInfo = async (params) => {
   }
 };
 
+const updateFlagRfidTagInfo = async (params) => {
+
+  try {
+    let sql = `UPDATE FM_RFIDTAG_INFO
+    SET  RFID_FLAG = 'Y',
+    STK_DOC_NO = :STK_DOC_NO,
+    STK_DOC_DATE = TO_DATE(:STK_DOC_DATE,'${constants.SLASH_DMY}'),
+    STK_DOC_ITEM = :STK_DOC_ITEM,
+    LOCATION_CODE = :LOCATION_CODE,
+    EXTRA_CODE = :EXTRA_CODE,
+    LAST_USER_ID = :LAST_USER_ID,
+    LAST_UPDATE_DATE = SYSDATE
+    WHERE PLANT_CODE = :PLANT_CODE AND 
+    RFID_NO = :RFID_NO`;
+
+    console.log(params);
+    const result = await db.execute(sql, params);
+    
+    if (result.rowsAffected && result.rowsAffected === 1) {
+      return true;
+    } else {
+      throw new Error("not found!");
+    }
+  } catch (error) {
+    throw error;
+  }
+};
+
 module.exports = {
   insertRfidTagInfo,
   getRfidTagInfos,
-  updateRfidTagInfo
+  updateRfidTagInfo,
+  updateFlagRfidTagInfo
 };
