@@ -12,23 +12,13 @@ const router = new Router();
 router.get("/locations", location.getLocations);
 router.get("/prdorders/:plantCode/:panelId", receiveController.getProductionOrders);
 router.get("/panelConfigs/:panelId", configController.getPanelConfigs);
-
-router.post("/InsertrfidTagInfo", receiveController.insertRfidTagInfo);
-router.post("/UpdaterfidTagInfo", receiveController.updateRfidTagInfo);
-
-
 router.get("/rfidTagInfos/:plantCode/:rfidNo", receiveController.getRfidTagInfos);
-//router.post("/updateweights", productionOrder.setUpdateWghInRfid);
-
 router.get("/loginByRfid/:rfidNo", loginByRfid.getLoginByRFID);
-
 router.get("/loginByPassword/:password", loginByPassword.getLoginByPassword);
 
 router.post("/UserOrgModule/Orgs", UserOrgModule.getOrg);
-
-
-
-
-
+router.post("/InsertrfidTagInfo", receiveController.insertRfidTagInfo);
+router.post("/UpdaterfidTagInfo", receiveController.updateRfidTagInfo);
+router.post("/InsertFmStock", receiveController.insertFmStock);
 
 module.exports = router.routes();
