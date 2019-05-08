@@ -2,6 +2,32 @@ const moment = require("moment");
 const constants = require("../../../utils/constants");
 const db = require("../../../db");
 
+const getStock = async (plantCode, stkDocType,productionNo,productionDate) => {
+
+  try {
+    const sql = `SELECT STK_DOC_NO , STK_DOC_ITEM 
+    FROM FM_STOCK
+    WHERE PLANT_CODE = :PLANT_CODE AND STK_DOC_TYPE = :STK_DOC_TYPE
+    AND PRODUCTION_NO = :PRODUCTION_NO
+    AND STK_DOC_DATE = TO_DATE(:PRODUCTION_DATE,'${constants.SLASH_DMY}')
+    ORDER BY STK_DOC_DATE , STK_DOC_NO , STK_DOC_ITEM DESC `;
+
+    const params = {
+      PLANT_CODE: plantCode,
+      STK_DOC_TYPE: stkDocType,
+      PRODUCTION_NO: productionNo,
+      PRODUCTION_DATE: moment(productionDate).format(constants.SLASH_DMY)
+    };
+    let resultRows = await db.query(sql, params);
+
+    return resultRows;
+  } catch (error) {
+    throw error;
+  }
+};
+
+
+
 const insertFmStock = async (params) => {
 
     try {
@@ -52,7 +78,7 @@ const insertFmStock = async (params) => {
             :USER_CREATE,
             SYSDATE,
             :PROCESS_CODE,
-            '03',
+            :CLASSIFIED_TYPE,
             :PRODUCT_GROUP,
             :PRODUCT_CODE,
             '000',
@@ -81,5 +107,6 @@ const insertFmStock = async (params) => {
   };
 
   module.exports = {
-    insertFmStock
+    insertFmStock,
+    getStock
   };
