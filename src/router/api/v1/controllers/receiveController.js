@@ -5,6 +5,10 @@ const processDate = require("../processDate");
 const productionOrders = require("../productionOrder");
 const rfidTagInfos = require("../rfidTagInfo");
 const stocks = require("../stock");
+const locationSetup = require("../locationSetUp");
+const classifiedType = require("../classifiedType");
+const extra = require("../extraCode");
+const controlrunning = require("../controlRunning");
 
 const getProductionOrders = async ctx => {
     try {
@@ -95,27 +99,44 @@ const insertFmStock = async ctx => {
     const req = ctx.request.body;
     try {
         const [config] = await panelConfig.getPanelConfig(req.panelId);
-        const stockDocType = config.STOCKDOCTYPE;
-        const rfidTagInfo = await rfidTagInfos.getRfidTagInfos(req.plantCode,req.rfidNo);
-
+        const [rfidTagInfo] = await rfidTagInfos.getRfidTagInfos(req.plantCode,req.rfidNo);
+        const [location] = await locationSetup.getLocations(req.plantCode);
+        const classifiedTypeSetUp = await classifiedType.getClassifiedType(rfidTagInfo.PRODUCT_CODE);
+        const extraCode = await extra.getExtraCode(req.plantCode,rfidTagInfo.LOT_NO,rfidTagInfo.PRODUCTION_DATE,"",req.userId);
+        const dataStock = await stocks.getStock(req.plantCode,config.STOCKDOCTYPE,req.productionNo,req.productionDate);
+        
+        let docNo ;
+        let stkDocItem;
+        if (dataStock.length == 0) {
+            docNo = await controlrunning.getControlRunning(config.MODULECODE,req.plantCode,config.STOCKDOCTYPE,config.STOCKDOCTYPE,config.STOCKDOCTYPE,req.productionDate,req.userId,config.PREFIX);
+            stkDocItem = 1;
+          }
+        else {const row = dataStock[0]
+            //console.log(row.STK_DOC_NO);
+            
+             docNo = row.STK_DOC_NO
+            stkDocItem = row.STK_DOC_ITEM + 1 };
+            
+        
         const params = {
             PLANT_CODE: req.plantCode,
             SHIFT_CODE: rfidTagInfo.SHIFT_CODE,
             LOT_NO: rfidTagInfo.LOT_NO,
             REMARK: req.rfidNo,
             STK_DOC_DATE: moment(req.productionDate).format(constants.SLASH_DMY),
-            STK_DOC_TYPE: stockDocType,
-            //STK_DOC_NO:,
+            STK_DOC_TYPE: config.STOCKDOCTYPE,
+            STK_DOC_NO: docNo,
             //STK_DOC_ITEM:,
             ORG_CODE: req.plantCode,
             USER_CREATE: req.userId,
-            //PROCESS_CODE: ,
-            //PRODUCT_GROUP: ,
+            PROCESS_CODE: location.PROCESS_CODE,
+            CLASSIFIED_TYPE: classifiedTypeSetUp.CLASSIFIED_TYPE,
+            PRODUCT_GROUP: classifiedTypeSetUp.PRODUCT_GROUP,
             PRODUCT_CODE: rfidTagInfo.PRODUCT_CODE,
-            //EXTRA_CODE:,
+            EXTRA_CODE: extraCode,
             STOCK_QTY: rfidTagInfo.STOCK_QTY,
             STOCK_WGH: rfidTagInfo.STOCK_WGH,
-            TO_LOCATION: rfidTagInfo.LOCATION_CODE,
+            TO_LOCATION: config.LOCATIONCODE,
             MACHINE_NO: rfidTagInfo.PRODUCTION_LINE,
             REF_MACHINE_CODE: rfidTagInfo.PRODUCTION_LINE,
             BRAND_CODE: rfidTagInfo.BRAND_CODE,
