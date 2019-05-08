@@ -32,14 +32,14 @@ const query = async (queryString, paramVal) => {
   //console.log(executeResult)
 };
 
-const execute = async (queryString, paramVal,autoCommit=true) => {
+const execute = async (queryString, paramVal, autoCommit = true) => {
   process.env.UV_THREADPOOL_SIZE = 10;
   process.env.ORA_SDTZ = "UTC";
 
   if (queryString) {
     oracledb.outFormat = oracledb.OBJECT;
     oracledb.autoCommit = autoCommit;
-
+    const pool = await oracledb.createPool(dbConfig);
     const conn = await pool.getConnection();
     try {
       let executeResult;
@@ -59,7 +59,20 @@ const execute = async (queryString, paramVal,autoCommit=true) => {
   //console.log(executeResult)
 };
 
+const getConnection = async () => {
+  oracledb.outFormat = oracledb.OBJECT;
+  oracledb.autoCommit = false;
+  const pool = await oracledb.createPool(dbConfig);
+  //modify the original oracledb pool instance
+  // SimpleOracleDB.extend(pool);
+  const conn = await pool.getConnection();
+  //modify the original oracledb connection instance
+  // SimpleOracleDB.extend(conn);
+  return conn;
+};
+
 module.exports = {
   query,
-  execute
+  execute,
+  getConnection
 };

@@ -1,5 +1,5 @@
 const db = require("../../../db");
-const constants = require("../../../utils/string_helper");
+const constants = require("../../../utils/constants");
 const string_helper = require("../../../utils/string_helper");
 const moment = require("moment");
 // const fetch = require("node-fetch");

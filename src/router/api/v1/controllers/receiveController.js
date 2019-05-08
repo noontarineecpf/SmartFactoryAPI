@@ -1,3 +1,4 @@
+const db = require("../../../../db");
 const moment = require("moment");
 const constants = require("../../../../utils/constants");
 const panelConfig = require("../PanelConfig");
@@ -30,7 +31,8 @@ const insertRfidTagInfo = async ctx => {
 		const [config] = await panelConfig.getPanelConfig(req.panelId);
 		const locationCode = config.LOCATIONCODE;
 		const rfidType = config.RFIDTYPE;
-		const productionOrderData = await productionOrder.getProductionOrderWithNo(req.plantCode, req.productionNo, req.productionDate, req.extend);
+		const productionDate = await processDate.getProcessDate(req.plantCode, locationCode);
+		const productionOrderData = await productionOrder.getProductionOrderWithNo(req.plantCode, req.productionNo, productionDate, req.extend);
 
 		const params = {
 			plantCode: req.plantCode,
@@ -43,7 +45,7 @@ const insertRfidTagInfo = async ctx => {
 			prdCode: productionOrderData.PRODUCT_CODE,
 			lotNo: productionOrderData.LOT_NO,
 			shiftCode: productionOrderData.PRODUCTION_SHIFT,
-			productionDate: moment(req.productionDate).format(constants.SLASH_DMY),
+			productionDate: moment(productionDate).format(constants.SLASH_DMY),
 			locationCode: locationCode,
 			userId: req.userId,
 			supervisorCode: req.supervisorCode
@@ -87,22 +89,31 @@ const updateRfidTagInfo = async ctx => {
 };
 
 const insertFmStock = async ctx => {
-	const req = ctx.request.body;
+	const conn = await db.getConnection();
+	const {
+		plantCode,
+		panelId,
+		rfidNo,
+		productionNo,
+		userId
+	} = ctx.request.body;
 	try {
-		const [config] = await panelConfig.getPanelConfig(req.panelId);
-		const [rfidTagInfo] = await rfidTagInfo.getRfidTagInfos(req.plantCode, req.rfidNo);
-		const [location] = await locationSetup.getLocations(req.plantCode);
-		const classifiedTypeSetUp = await classifiedType.getClassifiedType(rfidTagInfo.PRODUCT_CODE);
-		const extraCode = await extra.getExtraCode(req.plantCode, rfidTagInfo.LOT_NO, rfidTagInfo.PRODUCTION_DATE, "", req.userId);
-		const dataStock = await stock.getStock(req.plantCode, config.STOCKDOCTYPE, req.productionNo, req.productionDate);
+		const [config] = await panelConfig.getPanelConfig(panelId);
+		const [rfid] = await rfidTagInfo.getRfidTagInfos(plantCode, rfidNo);
+		const [location] = await locationSetup.getLocations(plantCode);
+		const classifiedTypeSetUp = await classifiedType.getClassifiedType(rfid.PRODUCT_CODE);
+		const extraCode = await extra.getExtraCode(plantCode, rfid.LOT_NO, rfid.PRODUCTION_DATE, "", userId);
+
+		const productionDate = await processDate.getProcessDate(plantCode, rfid.LOCATION_CODE);
+		const stockData = await stock.getStock(plantCode, config.STOCKDOCTYPE, productionNo, productionDate);
 
 		let docNo;
 		let stkDocItem;
-		if (dataStock.length == 0) {
-			docNo = await controlRunning.getControlRunning(config.MODULECODE, req.plantCode, config.STOCKDOCTYPE, config.STOCKDOCTYPE, config.STOCKDOCTYPE, req.productionDate, req.userId, config.PREFIX);
+		if (stockData.length == 0) {
+			docNo = await controlRunning.getControlRunning(config.MODULECODE, plantCode, config.STOCKDOCTYPE, config.STOCKDOCTYPE, config.STOCKDOCTYPE, productionDate, userId, config.PREFIX);
 			stkDocItem = 1;
 		} else {
-			const row = dataStock[0];
+			const row = stockData[0];
 			//console.log(row.STK_DOC_NO);
 
 			docNo = row.STK_DOC_NO;
@@ -110,69 +121,69 @@ const insertFmStock = async ctx => {
 		}
 
 		const params = {
-			PLANT_CODE: req.plantCode,
-			SHIFT_CODE: rfidTagInfo.SHIFT_CODE,
-			LOT_NO: rfidTagInfo.LOT_NO,
-			REMARK: req.rfidNo,
-			STK_DOC_DATE: moment(req.productionDate).format(constants.SLASH_DMY),
+			PLANT_CODE: plantCode,
+			SHIFT_CODE: rfid.SHIFT_CODE,
+			LOT_NO: rfid.LOT_NO,
+			REMARK: rfidNo,
+			STK_DOC_DATE: moment(rfid.PRODUCTION_DATE).format(constants.SLASH_DMY),
 			STK_DOC_TYPE: config.STOCKDOCTYPE,
 			STK_DOC_NO: docNo,
-			//STK_DOC_ITEM:,
-			ORG_CODE: req.plantCode,
-			USER_CREATE: req.userId,
+			STK_DOC_ITEM: stkDocItem,
+			ORG_CODE: plantCode,
+			USER_CREATE: userId,
 			PROCESS_CODE: location.PROCESS_CODE,
 			CLASSIFIED_TYPE: classifiedTypeSetUp.CLASSIFIED_TYPE,
 			PRODUCT_GROUP: classifiedTypeSetUp.PRODUCT_GROUP,
-			PRODUCT_CODE: rfidTagInfo.PRODUCT_CODE,
+			PRODUCT_CODE: rfid.PRODUCT_CODE,
+			MEDICINE_CODE: "000",
+			GRADE_CODE: "00",
 			EXTRA_CODE: extraCode,
-			STOCK_QTY: rfidTagInfo.STOCK_QTY,
-			STOCK_WGH: rfidTagInfo.STOCK_WGH,
+			TRANSACTION_FLAG: "Y",
+			STOCK_QTY: rfid.STOCK_QTY,
+			STOCK_WGH: rfid.STOCK_WGH,
 			TO_LOCATION: config.LOCATIONCODE,
-			MACHINE_NO: rfidTagInfo.PRODUCTION_LINE,
-			REF_MACHINE_CODE: rfidTagInfo.PRODUCTION_LINE,
-			BRAND_CODE: rfidTagInfo.BRAND_CODE,
-			JOB_ID: rfidTagInfo.JOB_ID,
-			PRODUCTION_NO: req.productionNo
+			TO_LOCK_NO: "00000",
+			MACHINE_NO: rfid.PRODUCTION_LINE,
+			REF_MACHINE_CODE: rfid.PRODUCTION_LINE,
+			MACHINE_TYPE: "MP",
+			BRAND_CODE: rfid.BRAND_CODE,
+			JOB_ID: rfid.JOB_ID,
+			PRODUCTION_NO: productionNo
+		};
+		//INSERT FM_STOCK
+		const stockSql = await stock.insertFmStock();
+		await conn.execute(stockSql, params);
+		//UPDATE RFID FLAG
+		const rfidSql = await rfidTagInfo.updateRfidFlag();
+
+		const rfidParams = {
+			PLANT_CODE: plantCode,
+			RFID_NO: rfidNo,
+			LAST_USER_ID: userId
 		};
 
-		const result = await stock.insertFmStock(params);
-		ctx.body = result;
-		ctx.response.status = 200;
+		const result = await conn.execute(rfidSql, rfidParams);
+		if (result.rowsAffected && result.rowsAffected === 1) {
+			await conn.commit();
+			ctx.body = true;
+			ctx.response.status = 200;
+		} else {
+			throw new Error("not found!");
+		}
 	} catch (error) {
+		await conn.rollback();
 		throw error;
+	} finally {
+		await conn.close();
 	}
 };
 
-const updateFlagRfidTagInfo = async ctx => {
-	const req = ctx.request.body;
-	try {
-		const [config] = await panelConfig.getPanelConfig(req.panelId);
-		const locationCode = config.LOCATIONCODE;
 
-		const params = {
-			PLANT_CODE: req.PLANT_CODE,
-			RFID_NO: req.RFID_NO,
-			STK_DOC_NO: req.STK_DOC_NO,
-			STK_DOC_DATE: moment(req.STK_DOC_DATE).format(constants.SLASH_DMY),
-			STK_DOC_ITEM: req.STK_DOC_ITEM,
-			LOCATION_CODE: locationCode,
-			//EXTRA_CODE: ,
-			LAST_USER_ID: req.LAST_USER_ID
-		};
-
-		const result = await rfidTagInfo.updateFlagRfidTagInfo(params);
-		ctx.body = result;
-		ctx.response.status = 200;
-	} catch (error) {
-		throw error;
-	}
-};
 
 module.exports = {
 	getProductionOrders,
 	insertRfidTagInfo,
 	getRfidTagInfos,
 	updateRfidTagInfo,
-	insertFmStock,
-	updateFlagRfidTagInfo
+	insertFmStock
 };

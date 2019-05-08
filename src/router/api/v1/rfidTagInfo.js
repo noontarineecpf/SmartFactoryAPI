@@ -114,36 +114,32 @@ const updateRfidTagInfo = async params => {
 	}
 };
 
-const updateFlagRfidTagInfo = async params => {
-	try {
-		let sql = `UPDATE FM_RFIDTAG_INFO
-    SET  RFID_FLAG = 'Y',
-    STK_DOC_NO = :STK_DOC_NO,
-    STK_DOC_DATE = TO_DATE(:STK_DOC_DATE,'${constants.SLASH_DMY}'),
-    STK_DOC_ITEM = :STK_DOC_ITEM,
-    LOCATION_CODE = :LOCATION_CODE,
-    EXTRA_CODE = :EXTRA_CODE,
-    LAST_USER_ID = :LAST_USER_ID,
-    LAST_UPDATE_DATE = SYSDATE
-    WHERE PLANT_CODE = :PLANT_CODE AND 
-    RFID_NO = :RFID_NO`;
-
-		console.log(params);
-		const result = await db.execute(sql, params);
-
-		if (result.rowsAffected && result.rowsAffected === 1) {
-			return true;
-		} else {
-			throw new Error("not found!");
-		}
-	} catch (error) {
-		throw error;
-	}
-};
+const updateRfidFlag = async () => {
+  try {
+  let sql = `UPDATE FM_RFIDTAG_INFO 
+  SET RFID_FLAG = 'Y',
+  LAST_USER_ID = :LAST_USER_ID,
+  LAST_UPDATE_DATE = SYSDATE
+  WHERE PLANT_CODE = :PLANT_CODE 
+  AND RFID_NO = :RFID_NO`;
+  
+  return sql;
+  // console.log(params);
+  // const result = await db.execute(sql, params);
+  
+  // if (result.rowsAffected && result.rowsAffected === 1) {
+  // return true;
+  // } else {
+  // throw new Error("not found!");
+  // }
+  } catch (error) {
+  throw error;
+  }
+  };
 
 module.exports = {
 	insertRfidTagInfo,
 	getRfidTagInfos,
 	updateRfidTagInfo,
-	updateFlagRfidTagInfo
+	updateRfidFlag
 };
