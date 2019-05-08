@@ -1,6 +1,6 @@
 const db = require("../../../db");
-const constants = require("../../../utils/constants");
-//const string_helper = require("../../../utils/string_helper");
+const constants = require("../../../utils/string_helper");
+const string_helper = require("../../../utils/string_helper");
 const moment = require("moment");
 // const fetch = require("node-fetch");
 // const request = require("request-promise");
@@ -78,8 +78,8 @@ const getControlRunning = async (moduleCode, orgCode, controlDocumentType, contr
 			}
 			// console.log(seqOfPrefix);
 			// running = seqOfPrefix.join("");
-			//running = string_helper.stringConcat(seqOfPrefix);
-			running = seqOfPrefix;
+			running = string_helper.stringConcat(seqOfPrefix);
+			
 			// console.log("running", running);
 		} else {
 			throw new Error(`Not found data at control running! ${JSON.stringify(params)}`);

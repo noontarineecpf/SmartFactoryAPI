@@ -1,6 +1,4 @@
 const db = require("../../../db");
-// const fetch = require("node-fetch");
-// const request = require("request-promise");
 
 const getClassifiedType = async ProductCode => {
 	try {

@@ -1,8 +1,8 @@
 const db = require("../../../db");
-const processDate = require("./processDate");
+const processDate = require("./ProcessDate");
 const getProcessDate = async (orgCode, location) => {
-    try {
-        const sql = `SELECT PROCESS_DATE
+	try {
+		const sql = `SELECT PROCESS_DATE
         FROM FM_PROCESS_CONTROL
         WHERE PLANT_CODE = :orgCode
         AND PROCESS_CODE =
@@ -12,20 +12,20 @@ const getProcessDate = async (orgCode, location) => {
           AND LOCATION_CODE = :location
           )`;
 
-        //const sql = `   select sessiontimezone from dual `;
+		//const sql = `   select sessiontimezone from dual `;
 
-        const params = {
-            orgCode: orgCode,
-            location: location
-        };
-        console.log(params);
-        let resultRows = await db.query(sql, params);
-        // console.log(resultRows);
-        return resultRows[0].PROCESS_DATE;
-    } catch (error) {
-        console.log(error);
-    }
+		const params = {
+			orgCode: orgCode,
+			location: location
+		};
+		console.log(params);
+		let resultRows = await db.query(sql, params);
+		// console.log(resultRows);
+		return resultRows[0].PROCESS_DATE;
+	} catch (error) {
+		console.log(error);
+	}
 };
 module.exports = {
-    getProcessDate
+	getProcessDate
 };

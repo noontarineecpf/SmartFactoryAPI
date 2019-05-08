@@ -1,6 +1,6 @@
 const db = require("../../../db");
 const productStock = require("./ProductStock");
-const string_helper = require("../../../utils/string_helper");
+// const string_helper = require("../../../utils/string_helper");
 const moment = require("moment");
 const getLotNo = async (plantCode, productCode, documentDate, queueNo) => {
 	try {

@@ -1,11 +1,9 @@
-const moment = require("moment");
 const constants = require("../../../utils/constants");
 const db = require("../../../db");
 
 const getRfidTagInfos = async (plantCode, rfidNo) => {
-
-  try {
-    const sql = `SELECT RI.RFID_NO,RI.PRODUCTION_DATE,RI.PRODUCTION_NO,RI.PRODUCTION_LINE,WC.DESC_LOC,WC.DESC_ENG,
+	try {
+		const sql = `SELECT RI.RFID_NO,RI.PRODUCTION_DATE,RI.PRODUCTION_NO,RI.PRODUCTION_LINE,WC.DESC_LOC,WC.DESC_ENG,
         RI.SUPERVISOR_CODE,EI.DESC_LOC AS EMP_NAME_LOC,EI.DESC_ENG AS EMP_NAME_ENG,
         RI.PRODUCT_CODE,RI.BRAND_CODE,PG.DESC_LOC AS PRODUCT_NAME_LOC,
         PG.DESC_ENG AS PRODUCT_NAME_ENG,RI.LOT_NO, 
@@ -20,27 +18,25 @@ const getRfidTagInfos = async (plantCode, rfidNo) => {
         RI.SUPERVISOR_CODE = EI.EMPLOYEE_ID AND 
         RI.PRODUCT_CODE = PG.PRODUCT_CODE`;
 
-    const params = {
-      PLANT_CODE: plantCode,
-      RFID_NO: rfidNo
-    };
-    let resultRows = await db.query(sql, params);
+		const params = {
+			PLANT_CODE: plantCode,
+			RFID_NO: rfidNo
+		};
+		let resultRows = await db.query(sql, params);
 
-    if (resultRows.length == 0) {
-      throw new Error("ไม่พบ rfid no นี้");
-    }
+		if (resultRows.length == 0) {
+			throw new Error("ไม่พบ rfid no นี้");
+		}
 
-    return resultRows;
-  } catch (error) {
-    throw error;
-  }
+		return resultRows;
+	} catch (error) {
+		throw error;
+	}
 };
 
-
-const insertRfidTagInfo = async (params) => {
-
-  try {
-    let sql = `INSERT
+const insertRfidTagInfo = async params => {
+	try {
+		let sql = `INSERT
        INTO FM_RFIDTAG_INFO
          (
            PLANT_CODE,
@@ -84,19 +80,18 @@ const insertRfidTagInfo = async (params) => {
            :supervisorCode
          )`;
 
-    const result = await db.execute(sql, params);
-    console.log(result);
+		const result = await db.execute(sql, params);
+		console.log(result);
 
-    return true;
-  } catch (error) {
-    throw error;
-  }
+		return true;
+	} catch (error) {
+		throw error;
+	}
 };
 
-const updateRfidTagInfo = async (params) => {
-
-  try {
-    let sql = `UPDATE FM_RFIDTAG_INFO
+const updateRfidTagInfo = async params => {
+	try {
+		let sql = `UPDATE FM_RFIDTAG_INFO
     SET  RECEIVE_QTY = :STOCK_QTY,
     RECEIVE_WGH = :STOCK_WGH,
     STOCK_QTY = :STOCK_QTY,
@@ -106,23 +101,22 @@ const updateRfidTagInfo = async (params) => {
     WHERE PLANT_CODE = :PLANT_CODE AND 
     RFID_NO = :RFID_NO`;
 
-    console.log(params);
-    const result = await db.execute(sql, params);
+		console.log(params);
+		const result = await db.execute(sql, params);
 
-    if (result.rowsAffected && result.rowsAffected === 1) {
-      return true;
-    } else {
-      throw new Error("not found!");
-    }
-  } catch (error) {
-    throw error;
-  }
+		if (result.rowsAffected && result.rowsAffected === 1) {
+			return true;
+		} else {
+			throw new Error("not found!");
+		}
+	} catch (error) {
+		throw error;
+	}
 };
 
-const updateFlagRfidTagInfo = async (params) => {
-
-  try {
-    let sql = `UPDATE FM_RFIDTAG_INFO
+const updateFlagRfidTagInfo = async params => {
+	try {
+		let sql = `UPDATE FM_RFIDTAG_INFO
     SET  RFID_FLAG = 'Y',
     STK_DOC_NO = :STK_DOC_NO,
     STK_DOC_DATE = TO_DATE(:STK_DOC_DATE,'${constants.SLASH_DMY}'),
@@ -134,22 +128,22 @@ const updateFlagRfidTagInfo = async (params) => {
     WHERE PLANT_CODE = :PLANT_CODE AND 
     RFID_NO = :RFID_NO`;
 
-    console.log(params);
-    const result = await db.execute(sql, params);
+		console.log(params);
+		const result = await db.execute(sql, params);
 
-    if (result.rowsAffected && result.rowsAffected === 1) {
-      return true;
-    } else {
-      throw new Error("not found!");
-    }
-  } catch (error) {
-    throw error;
-  }
+		if (result.rowsAffected && result.rowsAffected === 1) {
+			return true;
+		} else {
+			throw new Error("not found!");
+		}
+	} catch (error) {
+		throw error;
+	}
 };
 
 module.exports = {
-  insertRfidTagInfo,
-  getRfidTagInfos,
-  updateRfidTagInfo,
-  updateFlagRfidTagInfo
+	insertRfidTagInfo,
+	getRfidTagInfos,
+	updateRfidTagInfo,
+	updateFlagRfidTagInfo
 };
