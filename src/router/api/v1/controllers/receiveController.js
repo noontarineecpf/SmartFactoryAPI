@@ -60,6 +60,7 @@ const insertRfidTagInfo = async ctx => {
 const getRfidTagInfos = async ctx => {
 	try {
 		const resultRows = await rfidTagInfo.getRfidTagInfos(ctx.params.plantCode, ctx.params.rfidNo);
+		console.log(resultRows);
 		ctx.body = JSON.stringify(resultRows);
 	} catch (error) {
 		console.log(error);
