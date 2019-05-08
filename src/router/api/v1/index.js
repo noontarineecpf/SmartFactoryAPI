@@ -1,6 +1,6 @@
 // const db = require("../../../db");
 const Router = require("koa-router");
-const location = require("./location");
+const location = require("./locationSetUp");
 const productionOrder = require("./productionOrder");
 const loginByRfid = require("./loginByRfid");
 const loginByPassword = require("./loginByPassword");
