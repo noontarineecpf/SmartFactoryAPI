@@ -1,6 +1,6 @@
 // const db = require("../../../db");
 const Router = require("koa-router");
-const location = require("./Location");
+const locationSetup = require("./LocationSetUp");
 // const productionOrder = require("./ProductionOrder");
 // const loginByRfid = require("./loginByRfid");
 // const loginByPassword = require("./loginByPassword");
@@ -11,11 +11,10 @@ const authenController = require("./controllers/AuthenController");
 const router = new Router();
 
 router.post("/authentication", authenController.authentication);
-router.get("/locations", location.getLocations);
+router.get("/locations", locationSetup.getLocations);
 router.get("/prdorders/:plantCode/:panelId", receiveController.getProductionOrders);
 router.get("/panelConfigs/:panelId", configController.getPanelConfigs);
 router.get("/rfidTagInfos/:plantCode/:rfidNo", receiveController.getRfidTagInfos);
-
 
 router.post("/UserOrgModule/Orgs", userOrgModule.getOrg);
 router.post("/InsertrfidTagInfo", receiveController.insertRfidTagInfo);

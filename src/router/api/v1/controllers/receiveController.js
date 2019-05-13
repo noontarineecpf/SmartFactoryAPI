@@ -62,10 +62,23 @@ const insertRfidTagInfo = async ctx => {
 const getRfidTagInfos = async ctx => {
 	try {
 		const resultRows = await rfidTagInfo.getRfidTagInfos(ctx.params.plantCode, ctx.params.rfidNo);
-		console.log(resultRows);
+		if (resultRows.length == 0) {
+			throw new Error("ไม่พบ rfid no นี้");
+			
+		}
+		else {
+			const row = resultRows[0];
+			console.log(row.RFID_FLAG);
+			if (row.RFID_FLAG == 'Y') {
+				throw new Error("RFID NO นี้มีการบันทึกเข้าระบบเรียบร้อยแล้ว กรุณาสแกน RFID NO อีกครั้ง");
+				
+			}
+		}
 		ctx.body = JSON.stringify(resultRows);
+		ctx.response.status = 200;
 	} catch (error) {
 		console.log(error);
+		throw error;
 	}
 };
 
