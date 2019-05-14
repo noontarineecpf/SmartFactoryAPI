@@ -10,6 +10,7 @@ const locationSetup = require("../LocationSetUp");
 const classifiedType = require("../ClassifiedType");
 const extra = require("../ExtraCode");
 const controlRunning = require("../ControlRunning");
+const rfidMapRegister = require("../RfidMapRegister");
 
 const getProductionOrders = async ctx => {
 	try {
@@ -64,14 +65,13 @@ const getRfidTagInfos = async ctx => {
 		const resultRows = await rfidTagInfo.getRfidTagInfos(ctx.params.plantCode, ctx.params.rfidNo);
 		if (resultRows.length == 0) {
 			throw new Error("ไม่พบ rfid no นี้");
-			
-		}
-		else {
+
+		} else {
 			const row = resultRows[0];
 			console.log(row.RFID_FLAG);
 			if (row.RFID_FLAG == 'Y') {
 				throw new Error("RFID NO นี้มีการบันทึกเข้าระบบเรียบร้อยแล้ว กรุณาสแกน RFID NO อีกครั้ง");
-				
+
 			}
 		}
 		ctx.body = JSON.stringify(resultRows);
@@ -191,12 +191,62 @@ const insertFmStock = async ctx => {
 	}
 };
 
+const getRfidRegister = async ctx => {
+	try {
+		const resultRows = await rfidMapRegister.getRfidRegister();
 
+		ctx.body = JSON.stringify(resultRows);
+		ctx.response.status = 200;
+	} catch (error) {
+		console.log(error);
+		throw error;
+	}
+};
+
+const insertRfidMapRegister = async ctx => {
+	const conn = await db.getConnection();
+	const {
+		userId,
+		rfidNo
+	} = ctx.request.body;
+	console.log(ctx.request.body);
+	try {
+		const [rfidRegister] = await rfidMapRegister.getRfidRegister();
+		console.log(rfidNo[0]);
+		
+		for (var i in rfidNo) {
+			const params = {
+			REGISTER_NO: rfidRegister.REGISTER_NO,
+			RFID_NO: rfidNo[i],
+			USER_CREATE: userId,
+			LAST_USER_ID: userId
+		};
+		console.log(params);
+		
+		const registerSql = await rfidMapRegister.insertRfidMapRegister();
+		console.log(registerSql);
+		await conn.execute(registerSql, params);
+		console.log("object");
+		}
+
+		await conn.commit();
+		ctx.body = true;
+		ctx.response.status = 200;
+		
+	} catch (error) {
+		await conn.rollback();
+		throw error;
+	} finally {
+		await conn.close();
+	}
+};
 
 module.exports = {
 	getProductionOrders,
 	insertRfidTagInfo,
 	getRfidTagInfos,
 	updateRfidTagInfo,
-	insertFmStock
+	insertFmStock,
+	getRfidRegister,
+	insertRfidMapRegister
 };
