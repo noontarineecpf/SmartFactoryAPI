@@ -9,7 +9,7 @@ const getProductionOrders = async (orgCode, productionDate,productionType) => {
                   (SELECT COUNT(1) FROM FM_RFIDTAG_INFO WHERE PRODUCTION_NO = PO.PRODUCTION_NO) AS TOTAL_QTY 
                   FROM FOOD.FD_PPD_PRODUCTION_ORDER PO ,FOOD.FD_PPD_WORK_CENTER WC , FOOD.FM_EMPLOYEE_INFO EI , STD.MAS_PRODUCT_GENERAL PG 
                   WHERE PO.PLANT_CODE = :PLANT_CODE AND 
-                  PO.PRODUCTION_TYPE =: PRODUCTION_TYPE AND
+                  PO.PRODUCTION_TYPE =:PRODUCTION_TYPE AND
                   PO.PRODUCTION_DATE = TO_DATE(:PRODUCTION_DATE,'${constants.SLASH_DMY}') AND 
                   PO.PLANT_CODE = WC.ORG_CODE AND 
                   PO.PRODUCTION_LINE = WC.WORK_CENTER AND 
@@ -24,6 +24,7 @@ const getProductionOrders = async (orgCode, productionDate,productionType) => {
 			PRODUCTION_DATE: moment(productionDate).format(constants.SLASH_DMY),
 			PRODUCTION_TYPE: productionType
 		};
+		console.log(params)
 		let resultRows = await db.query(sql, params);
 		return resultRows;
 	} catch (error) {

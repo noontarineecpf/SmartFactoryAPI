@@ -17,7 +17,7 @@ const getProductionOrders = async ctx => {
 	try {
 		const [config] = await panelConfig.getPanelConfig(ctx.params.panelId);
 		const locationCode = config.LOCATIONCODE;
-		const productionType = config.productionType;
+		const productionType = config.PRODUCTIONTYPE;
 		const productionDate = await processDate.getProcessDate(ctx.params.plantCode, locationCode);
 		const resultRows = await productionOrder.getProductionOrders(ctx.params.plantCode, productionDate,productionType);
 

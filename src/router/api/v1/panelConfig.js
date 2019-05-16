@@ -4,7 +4,8 @@ const getPanelConfig = async panelId => {
 		const sql = `select 
         PROGRAM_CODE AS ProgramCode,
         MAX(DECODE(panel_key,'LocationCode',panel_Value)) AS LocationCode,
-        MAX(DECODE(panel_key,'RfidType',panel_Value)) AS RfidType,
+		MAX(DECODE(panel_key,'RfidType',panel_Value)) AS RfidType,
+		MAX(DECODE(panel_key, 'ProductionType', panel_Value)) AS ProductionType,
         MAX(DECODE(panel_key,'StockDocType',panel_Value)) AS StockDocType,
         MAX(DECODE(panel_key,'ModuleCode',panel_Value)) AS ModuleCode,
 		MAX(DECODE(panel_key,'Prefix',panel_Value)) AS Prefix,
@@ -17,7 +18,7 @@ const getPanelConfig = async panelId => {
 		};
 
 		let resultRows = await db.query(sql, params);
-		console.log(resultRows);
+		
 		return resultRows;
 	} catch (error) {
 		console.log(error);
