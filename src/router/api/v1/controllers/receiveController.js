@@ -11,18 +11,21 @@ const classifiedType = require("../ClassifiedType");
 const extra = require("../ExtraCode");
 const controlRunning = require("../ControlRunning");
 const rfidMapRegister = require("../RfidMapRegister");
+const bomHeadItem = require("../BomHeadItem");
 
 const getProductionOrders = async ctx => {
 	try {
 		const [config] = await panelConfig.getPanelConfig(ctx.params.panelId);
 		const locationCode = config.LOCATIONCODE;
+		const productionType = config.productionType;
 		const productionDate = await processDate.getProcessDate(ctx.params.plantCode, locationCode);
-		const resultRows = await productionOrder.getProductionOrders(ctx.params.plantCode, productionDate);
+		const resultRows = await productionOrder.getProductionOrders(ctx.params.plantCode, productionDate,productionType);
 
 		ctx.body = JSON.stringify(resultRows);
+		ctx.response.status = 200;
 	} catch (error) {
-		ctx.response.status = 400;
 		console.log(error);
+		throw error;
 	}
 };
 
@@ -241,6 +244,20 @@ const insertRfidMapRegister = async ctx => {
 	}
 };
 
+const getBomHeadItems = async ctx => {
+	try {
+		const [config] = await panelConfig.getPanelConfig(ctx.params.panelId);
+		const bomUsage = config.BOMUSAGE;
+		const resultRows = await bomHeadItem.getBomHeadItems(ctx.params.orgCode,bomUsage,ctx.params.componentMaterial);
+
+		ctx.body = JSON.stringify(resultRows);
+		ctx.response.status = 200;
+	} catch (error) {
+		console.log(error);
+		throw error;
+	}
+};
+
 module.exports = {
 	getProductionOrders,
 	insertRfidTagInfo,
@@ -248,5 +265,6 @@ module.exports = {
 	updateRfidTagInfo,
 	insertFmStock,
 	getRfidRegister,
-	insertRfidMapRegister
+	insertRfidMapRegister,
+	getBomHeadItems
 };

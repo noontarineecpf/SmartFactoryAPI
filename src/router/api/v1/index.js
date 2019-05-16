@@ -16,6 +16,7 @@ router.get("/prdorders/:plantCode/:panelId", receiveController.getProductionOrde
 router.get("/panelConfigs/:panelId", configController.getPanelConfigs);
 router.get("/rfidTagInfos/:plantCode/:rfidNo", receiveController.getRfidTagInfos);
 router.get("/rfidMapRegister", receiveController.getRfidRegister);
+router.get("/bomHeadItems/:orgCode/:panelId/:componentMaterial", receiveController.getBomHeadItems);
 
 router.post("/UserOrgModule/Orgs", userOrgModule.getOrg);
 router.post("/InsertrfidTagInfo", receiveController.insertRfidTagInfo);
