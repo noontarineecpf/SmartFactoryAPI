@@ -12,6 +12,7 @@ const extra = require("../ExtraCode");
 const controlRunning = require("../ControlRunning");
 const rfidMapRegister = require("../RfidMapRegister");
 const bomHeadItem = require("../BomHeadItem");
+const docTypeConfig = require("../DocumentTypeConfig");
 
 const getProductionOrders = async ctx => {
 	try {
@@ -19,7 +20,7 @@ const getProductionOrders = async ctx => {
 		const locationCode = config.LOCATIONCODE;
 		const productionType = config.PRODUCTIONTYPE;
 		const productionDate = await processDate.getProcessDate(ctx.params.plantCode, locationCode);
-		const resultRows = await productionOrder.getProductionOrders(ctx.params.plantCode, productionDate,productionType);
+		const resultRows = await productionOrder.getProductionOrders(ctx.params.plantCode, productionDate, productionType);
 
 		ctx.body = JSON.stringify(resultRows);
 		ctx.response.status = 200;
@@ -216,26 +217,26 @@ const insertRfidMapRegister = async ctx => {
 	try {
 		const [rfidRegister] = await rfidMapRegister.getRfidRegister();
 		console.log(rfidNo[0]);
-		
+
 		for (var i in rfidNo) {
 			const params = {
-			REGISTER_NO: rfidRegister.REGISTER_NO,
-			RFID_NO: rfidNo[i],
-			USER_CREATE: userId,
-			LAST_USER_ID: userId
-		};
-		console.log(params);
-		
-		const registerSql = await rfidMapRegister.insertRfidMapRegister();
-		console.log(registerSql);
-		await conn.execute(registerSql, params);
-		console.log("object");
+				REGISTER_NO: rfidRegister.REGISTER_NO,
+				RFID_NO: rfidNo[i],
+				USER_CREATE: userId,
+				LAST_USER_ID: userId
+			};
+			console.log(params);
+
+			const registerSql = await rfidMapRegister.insertRfidMapRegister();
+			console.log(registerSql);
+			await conn.execute(registerSql, params);
+			console.log("object");
 		}
 
 		await conn.commit();
 		ctx.body = true;
 		ctx.response.status = 200;
-		
+
 	} catch (error) {
 		await conn.rollback();
 		throw error;
@@ -248,7 +249,22 @@ const getBomHeadItems = async ctx => {
 	try {
 		const [config] = await panelConfig.getPanelConfig(ctx.params.panelId);
 		const bomUsage = config.BOMUSAGE;
-		const resultRows = await bomHeadItem.getBomHeadItems(ctx.params.orgCode,bomUsage,ctx.params.componentMaterial);
+		const resultRows = await bomHeadItem.getBomHeadItems(ctx.params.orgCode, bomUsage, ctx.params.componentMaterial);
+
+		ctx.body = JSON.stringify(resultRows);
+		ctx.response.status = 200;
+	} catch (error) {
+		console.log(error);
+		throw error;
+	}
+};
+
+const getDocumentTypeConfig = async ctx => {
+	try {
+		const [config] = await panelConfig.getPanelConfig(ctx.params.panelId);
+		console.log(config.DOCREQUESTTYPE);
+		const docRequestType = config.DOCREQUESTTYPE;
+		const resultRows = await docTypeConfig.getDocumentTypeConfig(ctx.params.plantCode, docRequestType);
 
 		ctx.body = JSON.stringify(resultRows);
 		ctx.response.status = 200;
@@ -266,5 +282,6 @@ module.exports = {
 	insertFmStock,
 	getRfidRegister,
 	insertRfidMapRegister,
-	getBomHeadItems
+	getBomHeadItems,
+	getDocumentTypeConfig
 };

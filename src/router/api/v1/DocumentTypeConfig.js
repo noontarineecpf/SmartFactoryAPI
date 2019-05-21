@@ -5,12 +5,14 @@ const getDocumentTypeConfig = async (plantCode, docType) => {
   NVL(USE_MACHINE_FLAG,'N') AS USE_MACHINE_FLAG
 FROM FD_DOCUMENT_TYPE_CONFIG
 WHERE PLANT_CODE  = :PLANT_CODE
-AND DOCUMENT_TYPE =: DOCUMENT_TYPE `;
+AND DOCUMENT_TYPE = :DOCUMENT_TYPE`;
 
         const params = {
             PLANT_CODE: plantCode,
             DOCUMENT_TYPE: docType
         };
+
+        console.log(params);
 
         let resultRows = await db.query(sql, params);
         if (resultRows.length == 0) {

@@ -9,7 +9,8 @@ const getPanelConfig = async panelId => {
         MAX(DECODE(panel_key,'StockDocType',panel_Value)) AS StockDocType,
         MAX(DECODE(panel_key,'ModuleCode',panel_Value)) AS ModuleCode,
 		MAX(DECODE(panel_key,'Prefix',panel_Value)) AS Prefix,
-		MAX(DECODE(panel_key, 'BomUsage', panel_Value)) AS BomUsage
+		MAX(DECODE(panel_key, 'BomUsage', panel_Value)) AS BomUsage,
+		MAX(DECODE(panel_key, 'DocRequestType', panel_Value)) AS DocRequestType
 		from Fd_Panel_Config  where panel_id= :panelId
 		GROUP BY PROGRAM_CODE`;
 
