@@ -4,7 +4,7 @@ const authentication = async ctx => {
 	try {
 		const {rfidNo, password} = ctx.request.body;
 		const result = await rfidEmployee.getRfidEmployee(rfidNo, password);
-		ctx.body = JSON.stringify(result);
+		ctx.body = JSON.stringify(result[0]);
 	} catch (error) {
 		throw error;
 		// ctx.response.status = 400;
