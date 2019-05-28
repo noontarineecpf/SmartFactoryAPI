@@ -138,9 +138,33 @@ const updateRfidFlag = async () => {
   }
 };
 
+const getCheckBalanceReceive = async (plantCode, productCode,rfidType) => {
+  try {
+    const sql = `SELECT SUM(RF.RECEIVE_QTY) AS SLBALANCE_QTY
+    FROM FM_RFIDTAG_INFO RF,
+    GD2_FM_MAS_RFIDTAG MAS
+    WHERE RF.RFID_TYPE  = MAS.RFID_TYPE
+    AND RF.PRODUCT_CODE = :PRODUCT_CODE
+    AND RF.PLANT_CODE   = :PLANT_CODE
+    AND RF.RFID_TYPE = :RFID_TYPE
+    AND RF.RFID_FLAG = 'Y'`;
+
+    const params = {
+      PLANT_CODE: plantCode,
+      PRODUCT_CODE: productCode,
+      RFID_TYPE: rfidType
+    };
+    let resultRows = await db.query(sql, params);
+    return resultRows;
+  } catch (error) {
+    throw error;
+  }
+};
+
 module.exports = {
   insertRfidTagInfo,
   getRfidTagInfos,
   updateRfidTagInfo,
-  updateRfidFlag
+  updateRfidFlag,
+  getCheckBalanceReceive
 };

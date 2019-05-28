@@ -13,6 +13,10 @@ const controlRunning = require("../ControlRunning");
 const rfidMapRegister = require("../RfidMapRegister");
 const bomHeadItem = require("../BomHeadItem");
 const docTypeConfig = require("../DocumentTypeConfig");
+const masRfidTag = require("../Gd2MasRfidTag");
+const rfidRequestIssued = require("../RfidRequestIssued");
+const workCenter = require("../WorkCenter");
+
 
 const getProductionOrders = async ctx => {
 	try {
@@ -72,7 +76,6 @@ const getRfidTagInfos = async ctx => {
 
 		} else {
 			const row = resultRows[0];
-			console.log(row.RFID_FLAG);
 			if (row.RFID_FLAG == 'Y') {
 				throw new Error("RFID NO นี้มีการบันทึกเข้าระบบเรียบร้อยแล้ว กรุณาสแกน RFID NO อีกครั้ง");
 
@@ -259,14 +262,95 @@ const getBomHeadItems = async ctx => {
 	}
 };
 
-const getDocumentTypeConfig = async ctx => {
+const insertRequestIssued = async ctx => {
+	const req = ctx.request.body;
 	try {
-		const [config] = await panelConfig.getPanelConfig(ctx.params.panelId);
-		console.log(config.DOCREQUESTTYPE);
+		const [config] = await panelConfig.getPanelConfig(req.panelId);
 		const docRequestType = config.DOCREQUESTTYPE;
-		const resultRows = await docTypeConfig.getDocumentTypeConfig(ctx.params.plantCode, docRequestType);
+		const [documentTypeConfig] = await docTypeConfig.getDocumentTypeConfig(req.plantCode, docRequestType);
+		const transactionFlag = documentTypeConfig.TRANSACTION_FLAG;
 
-		ctx.body = JSON.stringify(resultRows);
+		const issuedStation = await workCenter.getLocationByWorkCenter(req.plantCode, config.ISSUEDSTATION);
+		if (issuedStation.length == 0) {
+			throw new Error("ไม่พบข้อมูลจุดจ่าย (ข้อมูลสายการผลิต)");
+		} else {
+			const row = issuedStation[0];
+			const issuedLocationCode = row.LOCATION_CODE;
+			const productionDate = await processDate.getProcessDate(req.plantCode, issuedLocationCode);
+		}
+
+		const balanceReceive = await rfidTagInfo.getCheckBalanceReceive(req.plantCode, req.rmCode, config.RFIDTYPE);
+		if (balanceReceive.length == 0) {
+			throw new Error("สินค้านี้ไม่มียอดสินค้าคงเหลือสำหรับเบิก");
+		} else {
+			const row = balanceReceive[0];
+			if (req.requestQty > row.SLBALANCE_QTY) {
+				throw new Error("ปริมาณสินค้าที่เบิกมากกว่าปริมาณสินค้าคงเหลือ");
+			}
+		}
+		const rfidTypeRequest = await masRfidTag.getMaxRequest(config.RFIDTYPE);
+		if (rfidTypeRequest.length == 0) {
+			throw new Error("ไม่พบข้อมูล Master ตาราง GD2_FM_MAS_RFIDTAG ที่ RFID_TYPE " & config.RFIDTYPE);
+		} else {
+			const row = rfidTypeRequest[0];
+			if (config.MAXREQUESTFLAG == 'N') {
+				if (row.MAX_REQUEST_QTY == 0) {
+					throw new Error("ไม่ได้กำหนดปริมาณการเบิกต่อครั้งของประเภทภาชนะ(MAX_REQUEST_QTY.GD2_FM_MAS_RFIDTAG");
+				} else {
+					if (req.requestQty > row.MAX_REQUEST_QTY) {
+						throw new Error("ไม่สามารถขอเบิกเกินปริมาณที่กำหนด (สามารถขอเบิกได้สูงสุด = )" & row.MAX_REQUEST_QTY);
+					}
+				}
+			}
+		}
+
+		const requestIssued = await rfidRequestIssued.getCheckBalanceRfid(req.plantCode, productionDate, req.rmBrandCode, issuedLocationCode, config.RFIDTYPE);
+		if (requestIssued.length == 0) {
+			throw new Error("ไม่มียอดคงเหลือในสต็อค RFID");
+		} else {
+			const row = requestIssued[0];
+			if (row.RFBAL_QTY !== null && row.RFREQUEST_QTY !== null) {
+				const netQty = row.RFBAL_QTY - row.RFREQUEST_QTY;
+			}
+			if (netQty < req.requestQty) {
+				throw new Error("ปริมาณคงเหลือน้อยกว่าปริมาณขอเบิก (คงเหลือ = )" & netQty);
+			}
+		}
+
+		const extend = await rfidRequestIssued.getMaxExtend(req.plantCode, productionDate, req.productionLine, req.productionNo, config.DOCREQUESTTYPE);
+
+		const params = {
+
+			PLANT_CODE: req.plantCode,
+			REQUEST_TYPE: config.DOCREQUESTTYPE,
+			REQUEST_NO: req.productionNo,
+			DOCUMENT_DATE: moment(productionDate).format(constants.SLASH_DMY),
+			REQUEST_EXTEND: extend,
+			REQUEST_UL: req.productionLine,
+			BRAND_CODE: req.rmBrandCode,
+			PRODUCT_CODE: req.rmCode,
+			LOCATION_CODE: issuedLocationCode,
+			LOCK_NO: '00000',
+			ISSUED_STATION: config.ISSUEDSTATION,
+			JOB_ID: req.jobId,
+			RFID_TYPE: config.RFIDTYPE,
+			REQUEST_QUANTITY: req.requestQty,
+			REQUEST_WEIGHT: 0,
+			CONFIRM_QUANTITY: req.requestQty,
+			CONFIRM_WEIGHT: 0,
+			ACTUAL_QUANTITY: 0,
+			ACTUAL_WEIGHT: 0,
+			UNIT_CODE_QUANTITY: config.RFIDTYPE,
+			UNIT_CODE_WEIGHT: 'KG',
+			PRODUCTION_NO: req.productionNo,
+			USER_CREATE: req.userId,
+			LAST_USER_ID: req.userId,
+			SHIFT_CODE: req.shiftCode,
+			LOT_NO: req.lotNo
+		};
+
+		const result = await rfidRequestIssued.insertRfidRequestIssued(params);
+		ctx.body = result;
 		ctx.response.status = 200;
 	} catch (error) {
 		console.log(error);
@@ -283,5 +367,5 @@ module.exports = {
 	getRfidRegister,
 	insertRfidMapRegister,
 	getBomHeadItems,
-	getDocumentTypeConfig
+	insertRequestIssued
 };
