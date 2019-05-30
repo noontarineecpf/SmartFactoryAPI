@@ -7,9 +7,9 @@ const getLocations = async plantCode => {
 		const params = {
 			PLANT_CODE: plantCode
 		};
-		console.log(sql);
+	
 		let resultRows = await db.query(sql, params);
-		console.log(resultRows);
+		//console.log(resultRows);
 		return resultRows;
 	} catch (error) {
 		console.log(error);

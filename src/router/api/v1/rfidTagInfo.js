@@ -9,15 +9,16 @@ const getRfidTagInfos = async (plantCode, rfidNo) => {
         PG.DESC_ENG AS PRODUCT_NAME_ENG,RI.LOT_NO, 
         RI.SHIFT_CODE,NVL(RI.RECEIVE_QTY,0) AS RECEIVE_QTY,NVL(RI.RECEIVE_WGH,0) AS RECEIVE_WGH,
         NVL(RI.STOCK_QTY,0) AS STOCK_QTY,NVL(STOCK_WGH,0) AS STOCK_WGH, RI.LOCATION_CODE ,RI.JOB_ID,
-        NVL(RI.RFID_FLAG,'N') AS RFID_FLAG 
-        FROM FM_RFIDTAG_INFO RI , FD_PPD_WORK_CENTER WC , FM_EMPLOYEE_INFO EI , MAS_PRODUCT_GENERAL PG 
+        NVL(RI.RFID_FLAG, 'N') AS RFID_FLAG, RI.RFID_TYPE, NVL(MR.MIN_WEIGHT, 0) AS MIN_WEIGHT, NVL(MR.MAX_WEIGHT, 0) AS MAX_WEIGHT
+        FROM FM_RFIDTAG_INFO RI, FD_PPD_WORK_CENTER WC, FM_EMPLOYEE_INFO EI, MAS_PRODUCT_GENERAL PG, GD2_FM_MAS_RFIDTAG MR
         WHERE RI.PLANT_CODE = :PLANT_CODE AND 
         RI.RFID_NO = :RFID_NO AND
         RI.PLANT_CODE = WC.ORG_CODE AND 
         RI.PRODUCTION_LINE = WC.WORK_CENTER AND 
         RI.PLANT_CODE = EI.PLANT_CODE AND 
         RI.SUPERVISOR_CODE = EI.EMPLOYEE_ID AND 
-        RI.PRODUCT_CODE = PG.PRODUCT_CODE`;
+        RI.PRODUCT_CODE = PG.PRODUCT_CODE AND 
+        RI.RFID_TYPE = MR.RFID_TYPE`;
 
     const params = {
       PLANT_CODE: plantCode,
@@ -28,7 +29,7 @@ const getRfidTagInfos = async (plantCode, rfidNo) => {
     		if (resultRows.length == 0) {
     			throw new Error("ไม่พบ rfid no นี้");
     		}*/
-
+    console.log(resultRows);
     return resultRows;
   } catch (error) {
     throw error;
@@ -138,7 +139,7 @@ const updateRfidFlag = async () => {
   }
 };
 
-const getCheckBalanceReceive = async (plantCode, productCode,rfidType) => {
+const getCheckBalanceReceive = async (plantCode, productCode, rfidType) => {
   try {
     const sql = `SELECT SUM(RF.RECEIVE_QTY) AS SLBALANCE_QTY
     FROM FM_RFIDTAG_INFO RF,

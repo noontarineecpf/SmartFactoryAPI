@@ -23,5 +23,6 @@ router.post("/InsertrfidTagInfo", receiveController.insertRfidTagInfo);
 router.post("/UpdaterfidTagInfo", receiveController.updateRfidTagInfo);
 router.post("/InsertFmStock", receiveController.insertFmStock);
 router.post("/InsertrfidMapRegister", receiveController.insertRfidMapRegister);
+router.post("/InsertRequestIssued", receiveController.insertRequestIssued);
 
 module.exports = router.routes();

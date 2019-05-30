@@ -123,7 +123,6 @@ const insertFmStock = async ctx => {
 		const [location] = await locationSetup.getLocations(plantCode);
 		const classifiedTypeSetUp = await classifiedType.getClassifiedType(rfid.PRODUCT_CODE);
 		const extraCode = await extra.getExtraCode(plantCode, rfid.LOT_NO, rfid.PRODUCTION_DATE, "", userId);
-
 		const productionDate = await processDate.getProcessDate(plantCode, rfid.LOCATION_CODE);
 		const stockData = await stock.getStock(plantCode, config.STOCKDOCTYPE, productionNo, productionDate);
 
@@ -134,8 +133,6 @@ const insertFmStock = async ctx => {
 			stkDocItem = 1;
 		} else {
 			const row = stockData[0];
-			//console.log(row.STK_DOC_NO);
-
 			docNo = row.STK_DOC_NO;
 			stkDocItem = row.STK_DOC_ITEM + 1;
 		}
@@ -261,57 +258,58 @@ const getBomHeadItems = async ctx => {
 		throw error;
 	}
 };
-
+ 
 const insertRequestIssued = async ctx => {
 	const req = ctx.request.body;
 	try {
 		const [config] = await panelConfig.getPanelConfig(req.panelId);
 		const docRequestType = config.DOCREQUESTTYPE;
-		const [documentTypeConfig] = await docTypeConfig.getDocumentTypeConfig(req.plantCode, docRequestType);
-		const transactionFlag = documentTypeConfig.TRANSACTION_FLAG;
+		//const [documentTypeConfig] = await docTypeConfig.getDocumentTypeConfig(req.plantCode, docRequestType);
 
 		const issuedStation = await workCenter.getLocationByWorkCenter(req.plantCode, config.ISSUEDSTATION);
 		if (issuedStation.length == 0) {
 			throw new Error("ไม่พบข้อมูลจุดจ่าย (ข้อมูลสายการผลิต)");
-		} else {
-			const row = issuedStation[0];
-			const issuedLocationCode = row.LOCATION_CODE;
-			const productionDate = await processDate.getProcessDate(req.plantCode, issuedLocationCode);
-		}
+		} 
+
+		const row = issuedStation[0];
+		const issuedLocationCode = row.LOCATION_CODE;
+		const productionDate = await processDate.getProcessDate(req.plantCode, issuedLocationCode);
 
 		const balanceReceive = await rfidTagInfo.getCheckBalanceReceive(req.plantCode, req.rmCode, config.RFIDTYPE);
 		if (balanceReceive.length == 0) {
 			throw new Error("สินค้านี้ไม่มียอดสินค้าคงเหลือสำหรับเบิก");
-		} else {
-			const row = balanceReceive[0];
-			if (req.requestQty > row.SLBALANCE_QTY) {
-				throw new Error("ปริมาณสินค้าที่เบิกมากกว่าปริมาณสินค้าคงเหลือ");
-			}
+		}
+
+		const row1 = balanceReceive[0];
+		if (req.requestQty > row1.SLBALANCE_QTY) {
+			throw new Error("ปริมาณสินค้าที่เบิกมากกว่าปริมาณสินค้าคงเหลือ");
 		}
 		const rfidTypeRequest = await masRfidTag.getMaxRequest(config.RFIDTYPE);
 		if (rfidTypeRequest.length == 0) {
 			throw new Error("ไม่พบข้อมูล Master ตาราง GD2_FM_MAS_RFIDTAG ที่ RFID_TYPE " & config.RFIDTYPE);
-		} else {
-			const row = rfidTypeRequest[0];
-			if (config.MAXREQUESTFLAG == 'N') {
-				if (row.MAX_REQUEST_QTY == 0) {
-					throw new Error("ไม่ได้กำหนดปริมาณการเบิกต่อครั้งของประเภทภาชนะ(MAX_REQUEST_QTY.GD2_FM_MAS_RFIDTAG");
-				} else {
-					if (req.requestQty > row.MAX_REQUEST_QTY) {
-						throw new Error("ไม่สามารถขอเบิกเกินปริมาณที่กำหนด (สามารถขอเบิกได้สูงสุด = )" & row.MAX_REQUEST_QTY);
-					}
+		} 
+
+		const row2 = rfidTypeRequest[0];
+		if (config.MAXREQUESTFLAG == 'N') {
+			if (row2.MAX_REQUEST_QTY == 0) {
+				throw new Error("ไม่ได้กำหนดปริมาณการเบิกต่อครั้งของประเภทภาชนะ(MAX_REQUEST_QTY.GD2_FM_MAS_RFIDTAG");
+			} else {
+				if (req.requestQty > row2.MAX_REQUEST_QTY) {
+					throw new Error("ไม่สามารถขอเบิกเกินปริมาณที่กำหนด (สามารถขอเบิกได้สูงสุด = )" & row2.MAX_REQUEST_QTY);
 				}
 			}
 		}
 
 		const requestIssued = await rfidRequestIssued.getCheckBalanceRfid(req.plantCode, productionDate, req.rmBrandCode, issuedLocationCode, config.RFIDTYPE);
+		let netQty = 0;
 		if (requestIssued.length == 0) {
 			throw new Error("ไม่มียอดคงเหลือในสต็อค RFID");
 		} else {
-			const row = requestIssued[0];
-			if (row.RFBAL_QTY !== null && row.RFREQUEST_QTY !== null) {
-				const netQty = row.RFBAL_QTY - row.RFREQUEST_QTY;
+			const row3 = requestIssued[0];
+			if (row3.RFBAL_QTY !== null && row3.RFREQUEST_QTY !== null) {
+				netQty = row3.RFBAL_QTY - row3.RFREQUEST_QTY;
 			}
+
 			if (netQty < req.requestQty) {
 				throw new Error("ปริมาณคงเหลือน้อยกว่าปริมาณขอเบิก (คงเหลือ = )" & netQty);
 			}
