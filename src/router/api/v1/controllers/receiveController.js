@@ -91,6 +91,7 @@ const getRfidTagInfos = async ctx => {
 
 const updateRfidTagInfo = async ctx => {
 	const req = ctx.request.body;
+
 	try {
 		const params = {
 			PLANT_CODE: req.PLANT_CODE,
@@ -125,6 +126,10 @@ const insertFmStock = async ctx => {
 		const extraCode = await extra.getExtraCode(plantCode, rfid.LOT_NO, rfid.PRODUCTION_DATE, "", userId);
 		const productionDate = await processDate.getProcessDate(plantCode, rfid.LOCATION_CODE);
 		const stockData = await stock.getStock(plantCode, config.STOCKDOCTYPE, productionNo, productionDate);
+
+		if (rfid.STOCK_WGH == 0) {
+			throw new Error("ยังไม่มีการชั่งรับผลได้ กรุณาชั่งรับผลได้ให้เรียบร้อยก่อนการยืนยัน");
+		}
 
 		let docNo;
 		let stkDocItem;
@@ -258,7 +263,7 @@ const getBomHeadItems = async ctx => {
 		throw error;
 	}
 };
- 
+
 const insertRequestIssued = async ctx => {
 	const req = ctx.request.body;
 	try {
@@ -269,7 +274,7 @@ const insertRequestIssued = async ctx => {
 		const issuedStation = await workCenter.getLocationByWorkCenter(req.plantCode, config.ISSUEDSTATION);
 		if (issuedStation.length == 0) {
 			throw new Error("ไม่พบข้อมูลจุดจ่าย (ข้อมูลสายการผลิต)");
-		} 
+		}
 
 		const row = issuedStation[0];
 		const issuedLocationCode = row.LOCATION_CODE;
@@ -287,7 +292,7 @@ const insertRequestIssued = async ctx => {
 		const rfidTypeRequest = await masRfidTag.getMaxRequest(config.RFIDTYPE);
 		if (rfidTypeRequest.length == 0) {
 			throw new Error("ไม่พบข้อมูล Master ตาราง GD2_FM_MAS_RFIDTAG ที่ RFID_TYPE " & config.RFIDTYPE);
-		} 
+		}
 
 		const row2 = rfidTypeRequest[0];
 		if (config.MAXREQUESTFLAG == 'N') {
